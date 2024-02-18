@@ -1,20 +1,31 @@
-import './App.css'
-import { Route, Routes } from 'react-router-dom';
-
-import Analyse from './pages/Analyse';
-import Authorization from './pages/Authorization';
+import { Route, Routes, Navigate } from 'react-router-dom'
+import Authorization from './pages/Authorization'
+import Analyse from './pages/Analyse'
+import CompetencesPage from './pages/CompetencesPage'
+import ProfessionsPage from './pages/ProfessionsPage'
+import MainLayout from './layouts/MainLayout'
+import PrivateRoute from './layouts/PrivateRoute'
 
 export default function App() {
-    return (
-        <Routes>
-            {/* Главная страница анализа */}
-            <Route path="/" element={<Analyse />} />
+  return (
+    <Routes>
+      <Route path="/login" element={<Authorization />} />
 
-            {/* Страница логина */}
-            <Route path="/login" element={<Authorization />} />
+      <Route
+        path="/"
+        element={
+          <PrivateRoute>
+            <MainLayout />
+          </PrivateRoute>
+        }
+      >
+        <Route index element={<Navigate to="/competences" />} />
+        <Route path="analyse" element={<Analyse />} />
+        <Route path="competences" element={<CompetencesPage />} />
+        <Route path="professions" element={<ProfessionsPage />} />
+      </Route>
 
-            {/* Страница анализа напрямую */}
-            <Route path="/analyse" element={<Analyse />} />
-        </Routes>
-    )
+      <Route path="*" element={<Navigate to="/login" />} />
+    </Routes>
+  )
 }

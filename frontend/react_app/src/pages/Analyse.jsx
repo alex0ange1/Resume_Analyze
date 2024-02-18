@@ -1,372 +1,131 @@
-import { useNavigate } from 'react-router-dom';
-import { logout } from '../utilits/auth';
+import { useEffect, useState } from 'react'
+import {
+  Container,
+  Paper,
+  Typography,
+  Box,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Alert,
+  CircularProgress,
+  Button,
+} from '@mui/material'
 import FileUpload from '../components/FileUpload'
-import { Box, Button } from '@mui/material';
-import LogoutIcon from '@mui/icons-material/Logout';
-import { useEffect, useState } from 'react';
-import { add_prof } from '../utilits/add_prof';
-import Loader from '../components/Loader';
+import api from '../utilits/api'
+import { logout } from '../utilits/auth'
+import { useNavigate } from 'react-router-dom'
 
 const Analyse = () => {
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate()
 
-  const prof_list = [
-    {
-      "name": "Data Scientist",
-      "competencies": {
-        "competencies": [
-          {
-                "name": "Определения, история развития и главные тренды ИИ",
-                "level": 1
-            },
-            {
-                "name": "Процесс, стадии и методологии разработки решений на основе ИИ (Docker, Linux/Bash, Git)",
-                "level": 2
-            },
-            {
-                "name": "Статистические методы и первичный анализ данных",
-                "level": 2
-            },
-            {
-                "name": "Оценка качества работы методов ИИ",
-                "level": 2
-            },
-            {
-                "name": "Языки программирования и библиотеки (Python, C++)",
-                "level": 1
-            },
-            {
-                "name": "SQL базы данных (GreenPLum, Postgres, Oracle)",
-                "level": 1
-            },
-            {
-                "name": "NoSQL базы данных (Cassandra, MongoDB, ElasticSearch, Neo4J, Hbase)",
-                "level": 1
-            },
-            {
-                "name": "Hadoop, SPARK, Hive",
-                "level": 1
-            },
-            {
-                "name": "Качество и предобработка данных, подходы и инструменты",
-                "level": 2
-            },
-            {
-                "name": "Работа с распределенной кластерной системой",
-                "level": 1
-            },
-            {
-                "name": "Методы машинного обучения",
-                "level": 2
-            },
-            {
-                "name": "Рекомендательные системы",
-                "level": 1
-            },
-            {
-                "name": "Методы оптимизации",
-                "level": 2
-            },
-            {
-                "name": "Основы глубокого обучения",
-                "level": 2
-            },
-            {
-                "name": "Анализ изображений и видео",
-                "level": 2
-            },
-            {
-                "name": "Машинное обучение на больших данных",
-                "level": 1
-            },
-            {
-                "name": "Глубокое обучение для анализа естественного языка",
-                "level": 2
-            },
-            {
-                "name": "Обучение с подкреплением и глубокое обучение с подкреплением",
-                "level": 1
-            },
-            {
-                "name": "Глубокое обучение для анализа и генерации изображений, видео",
-                "level": 2
-            },
-            {
-                "name": "Анализ естественного языка",
-                "level": 2
-            },
-            {
-                "name": "Информационный поиск",
-                "level": 1
-            }
-        ]
-      }
-    },
-    {
-      "name": "Data Engineer",
-      "competencies": {
-        "competencies": [
-          {
-                "name": "Определения, история развития и главные тренды ИИ",
-                "level": 1
-            },
-            {
-                "name": "Процесс, стадии и методологии разработки решений на основе ИИ (Docker, Linux/Bash, Git)",
-                "level": 2
-            },
-            {
-                "name": "Статистические методы и первичный анализ данных",
-                "level": 1
-            },
-            {
-                "name": "Оценка качества работы методов ИИ",
-                "level": 1
-            },
-            {
-                "name": "Языки программирования и библиотеки (Python, С++)",
-                "level": 2
-            },
-            {
-                "name": "Работа с распределенной кластерной системой",
-                "level": 2
-            },
-            {
-                "name": "Методы машинного обучения",
-                "level": 2
-            },
-            {
-                "name": "Методы оптимизации",
-                "level": 1
-            },
-            {
-                "name": "Основы глубокого обучения",
-                "level": 2
-            },
-            {
-                "name": "Анализ изображений и видео",
-                "level": 1
-            },
-            {
-                "name": "Машинное обучение на больших данных",
-                "level": 2
-            },
-            {
-                "name": "Массово параллельные вычисления для ускорения машинного обучения (GPU)",
-                "level": 1
-            },
-            {
-                "name": "Глубокое обучение для анализа естественного языка",
-                "level": 2
-            },
-            {
-                "name": "Потоковая обработка данных (data streaming, event processing)",
-                "level": 2
-            },
-            {
-                "name": "Глубокое обучение для анализа и генерации изображений, видео",
-                "level": 2
-            },
-            {
-                "name": "Анализ естественного языка",
-                "level": 1
-            },
-            {
-                "name": "Информационный поиск",
-                "level": 1
-            },
-            {
-                "name": "SQL базы данных (GreenPlum, Postgres, Oracle)",
-                "level": 3
-            },
-            {
-                "name": "NoSQL базы данных (Cassandra, MongoDB, ElasticSearch, Neo4J, Hbase)",
-                "level": 3
-            },
-            {
-                "name": "Массово параллельная обработка и анализ данных",
-                "level": 2
-            },
-            {
-                "name": "Hadoop, SPARK, Hive",
-                "level": 2
-            },
-            {
-                "name": "Качество и предобработка данных, подходы и инструменты",
-                "level": 3
-            }
-        ]
-      }
-    },    
-    {
-      "name": "Technical analyst in AI",
-      "competencies": {
-        "competencies": [
-          {
-                "name": "Определения, история развития и главные тренды ИИ", 
-                "level": 1
-            },
-            {
-                "name": "Процесс, стадии и методологии разработки решений на основе ИИ (Docker, Linux/Bash, Git)",
-                "level": 1
-            },
-            {
-                "name": "Статистические методы и первичный анализ данных", 
-                "level": 1
-            },
-            {
-                "name": "Оценка качества работы методов ИИ", 
-                "level": 1
-            },
-            {
-                "name": "Языки программирования и библиотеки (Python, С++)",
-                "level": 1
-            },
-            {
-                "name": "Методы машинного обучения", 
-                "level": 1
-            },
-            {
-                "name": "Рекомендательные системы", 
-                "level": 1
-            },
-            {
-                "name": "Анализ изображений и видео", 
-                "level": 1
-            },
-            {
-                "name": "Анализ естественного языка",
-                "level": 1
-            },
-            {
-                "name": "Основы глубокого обучения",
-                "level": 1
-            },
-            {
-                "name": "Глубокое обучение для анализа и генерации изображений, видео", 
-                "level": 1
-            },
-            {
-                "name": "Глубокое обучение для анализа естественного языка", 
-                "level": 1
-            },
-            {
-                "name": "SQL базы данных (GreenPlum, Postgres, Oracle)",
-                "level": 1
-            },
-            {
-                "name": "NoSQL базы данных (Cassandra, MongoDB, ElasticSearch, Neo4J, Hbase)", 
-                "level": 1
-            },
-            {
-                "name": "Качество и предобработка данных, подходы и инструменты", 
-                "level": 1
-            }
-        ]
-      }
-    },
-    {
-      "name": "Manager in AI",
-      "competencies": {
-        "competencies": [
-          {
-                "name": "Определения, история развития и главные тренды ИИ",
-                "level": 1
-            },
-            {
-                "name": "Процесс, стадии и методологии разработки решений на основе ИИ (Docker, Linux/Bash, Git)",
-                "level": 1
-            },
-            {
-                "name": "Оценка качества работы методов ИИ", 
-                "level": 1
-            },
-            {
-                "name": "Методы машинного обучения",
-                "level": 1
-            },
-            {
-                "name": "Анализ изображений и видео", 
-                "level": 1
-            },
-            {
-                "name": "Анализ естественного языка",
-                "level": 1
-            },
-            {
-                "name": "Основы глубокого обучения", 
-                "level": 1
-            },
-            {
-                "name": "Глубокое обучение для анализа и генерации изображений, видео", 
-                "level": 1
-            },
-            {
-                "name": "Глубокое обучение для анализа естественного языка", 
-                "level": 1
-            },
-            {
-                "name": "SQL базы данных (GreenPlum, Postgres, Oracle)", 
-                "level": 1
-            },
-            {
-                "name": "NoSQL базы данных (Cassandra, MongoDB, ElasticSearch, Neo4J, Hbase)", 
-                "level": 1
-            },
-            {
-                "name": "Качество и предобработка данных, подходы и инструменты", 
-                "level": 1
-            }
-        ]
-      }
+  const [professions, setProfessions] = useState([])
+  const [professionId, setProfessionId] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  const loadProfessions = async () => {
+    setLoading(true)
+    setError('')
+    try {
+      const res = await api.get('/all_professions')
+      setProfessions(Array.isArray(res.data) ? res.data : [])
+    } catch (e) {
+      const msg = e?.response?.data?.detail || e?.message || 'Ошибка загрузки профессий'
+      setError(String(msg))
+    } finally {
+      setLoading(false)
     }
-  ];
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        await Promise.all(
-          prof_list.map(prof =>
-            add_prof(prof.name, prof.competencies.competencies) // Асинхронно выполняем все операции
-          )
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
+  }
 
-    fetchData();
-  }, []);
+  useEffect(() => {
+    loadProfessions()
+  }, [])
 
   const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
+    logout()
+    navigate('/login')
+  }
+
+  const isEmpty = !loading && !error && professions.length === 0
 
   return (
-    <div>
-      <FileUpload />
-      
-      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3, mb: 2 }}>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={handleLogout}
-          endIcon={<LogoutIcon />}
-          sx={{ 
-            borderRadius: '4px',
-            px: 3,
-            py: 1,
-            bgcolor: '#0078C8',
-            '&:hover': {
-              bgcolor: '#00396F',
-            }
-          }}
-        >
-          Выйти из аккаунта
-        </Button>
-      </Box>
-    </div>
-  );
-};
+    <Box
+      sx={{
+        minHeight: 'calc(100vh - 64px)',
+        background: '#F6F8FB',
+        py: 4,
+      }}
+    >
+      <Container maxWidth="md">
+        <Paper elevation={2} sx={{ p: 3, borderRadius: 2 }}>
+          <Typography variant="h5" sx={{ color: 'primary.main', fontWeight: 700 }}>
+            Анализ соответствия навыков
+          </Typography>
 
-export default Analyse;
+          <Box sx={{ mt: 2 }}>
+            {loading && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <CircularProgress size={22} />
+                <Typography variant="body2">Загружаем профессии…</Typography>
+              </Box>
+            )}
+
+            {!loading && error && (
+              <Alert
+                severity="error"
+                action={
+                  <Button color="inherit" size="small" onClick={loadProfessions}>
+                    Повторить
+                  </Button>
+                }
+                sx={{ mb: 2 }}
+              >
+                {error}
+              </Alert>
+            )}
+
+            {isEmpty && (
+              <Alert severity="info" sx={{ mb: 2 }}>
+                Профессий пока нет. Перейдите во вкладку «Профессии», создайте профессию и вернитесь сюда.
+              </Alert>
+            )}
+
+            <FormControl fullWidth disabled={loading || !!error || professions.length === 0} sx={{ mt: 1 }}>
+              <InputLabel>Профессия</InputLabel>
+              <Select
+                value={professionId}
+                label="Профессия"
+                onChange={(e) => setProfessionId(e.target.value)}
+              >
+                {professions.map((p) => (
+                  <MenuItem key={p.id} value={p.id}>
+                    {p.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
+
+          <Box sx={{ mt: 3 }}>
+            <Typography sx={{ mb: 1 }}>Загрузите резюме для анализа</Typography>
+            <FileUpload professionId={professionId} disabled={!professionId} />
+            {!professionId && (
+              <Typography variant="caption" color="text.secondary">
+              </Typography>
+            )}
+          </Box>
+        </Paper>
+
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+          <Button variant="contained" onClick={handleLogout}>
+            Выйти из аккаунта
+          </Button>
+        </Box>
+      </Container>
+    </Box>
+  )
+}
+
+export default Analyse
