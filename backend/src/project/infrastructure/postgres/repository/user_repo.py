@@ -14,8 +14,8 @@ class UserRepository:
     _collection: Type[User] = User
 
     async def check_connection(
-            self,
-            session: AsyncSession,
+        self,
+        session: AsyncSession,
     ) -> bool:
         query = select(true())
 
@@ -25,14 +25,11 @@ class UserRepository:
             return False
 
     async def get_user_by_email(
-            self,
-            session: AsyncSession,
-            email: str,
+        self,
+        session: AsyncSession,
+        email: str,
     ) -> UserSchema:
-        query = (
-            select(self._collection)
-            .where(self._collection.email == email)
-        )
+        query = select(self._collection).where(self._collection.email == email)
 
         user = await session.scalar(query)
 
@@ -42,8 +39,8 @@ class UserRepository:
         return UserSchema.model_validate(obj=user)
 
     async def get_all_users(
-            self,
-            session: AsyncSession,
+        self,
+        session: AsyncSession,
     ) -> list[UserSchema]:
         query = select(self._collection)
 
@@ -52,14 +49,11 @@ class UserRepository:
         return [UserSchema.model_validate(obj=user) for user in users.all()]
 
     async def get_user_by_id(
-            self,
-            session: AsyncSession,
-            user_id: int,
+        self,
+        session: AsyncSession,
+        user_id: int,
     ) -> UserSchema:
-        query = (
-            select(self._collection)
-            .where(self._collection.id == user_id)
-        )
+        query = select(self._collection).where(self._collection.id == user_id)
 
         user = await session.scalar(query)
 
@@ -69,9 +63,9 @@ class UserRepository:
         return UserSchema.model_validate(obj=user)
 
     async def create_user(
-            self,
-            session: AsyncSession,
-            user: UserCreateUpdateSchema,
+        self,
+        session: AsyncSession,
+        user: UserCreateUpdateSchema,
     ) -> UserSchema:
         query = (
             insert(self._collection)
@@ -88,10 +82,10 @@ class UserRepository:
         return UserSchema.model_validate(obj=created_user)
 
     async def update_user(
-            self,
-            session: AsyncSession,
-            user_id: int,
-            user: UserCreateUpdateSchema,
+        self,
+        session: AsyncSession,
+        user_id: int,
+        user: UserCreateUpdateSchema,
     ) -> UserSchema:
         query = (
             update(self._collection)
@@ -107,11 +101,7 @@ class UserRepository:
 
         return UserSchema.model_validate(obj=updated_user)
 
-    async def delete_user(
-            self,
-            session: AsyncSession,
-            user_id: int
-    ) -> None:
+    async def delete_user(self, session: AsyncSession, user_id: int) -> None:
         query = delete(self._collection).where(self._collection.id == user_id)
 
         result = await session.execute(query)

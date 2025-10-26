@@ -36,4 +36,7 @@ metadata = MetaData(schema=settings.POSTGRES_SCHEMA)
 
 class Base(DeclarativeBase):
     metadata = metadata
-    type_annotation_map = {str: String().with_variant(String(255), "postgresql"), Dict[str, Any]: JSON}
+    type_annotation_map = {
+        str: String().with_variant(String(255), "postgresql"),
+        Dict[str, Any]: JSON,
+    }

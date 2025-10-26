@@ -1,14 +1,15 @@
 import asyncio
 import logging
-import uvicorn
 
+import uvicorn
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
-from project.core.config import settings
-
-from project.api.user_routes import user_router
 from project.api.auth_routes import auth_router
+from project.api.profession_routes import profession_router
+from project.api.user_routes import user_router
+from project.core.config import settings
+from project.api.competence_routes import competence_router
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +36,9 @@ def create_app() -> FastAPI:
     app.include_router(user_router, tags=["User"])
     app.include_router(auth_router, tags=["Auth"])
 
+    app.include_router(profession_router, tags=["Profession"])
+    app.include_router(competence_router, tags=["Competence"])
+
     return app
 
 
@@ -44,9 +48,7 @@ app = create_app()
 async def run() -> None:
     config = uvicorn.Config("main:app", host="0.0.0.0", port=8000, reload=False)
     server = uvicorn.Server(config=config)
-    tasks = (
-        asyncio.create_task(server.serve()),
-    )
+    tasks = (asyncio.create_task(server.serve()),)
 
     await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
 

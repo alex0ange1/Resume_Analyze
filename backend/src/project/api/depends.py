@@ -10,17 +10,25 @@ from project.schemas.user import UserSchema
 from project.core.config import settings
 from project.core.exceptions import CredentialsException
 from project.infrastructure.postgres.repository.user_repo import UserRepository
+from project.infrastructure.postgres.repository.profession_repo import (
+    ProfessionRepository,
+)
+from project.infrastructure.postgres.repository.competence_repo import (
+    CompetenceRepository,
+)
 from project.resource.auth import oauth2_scheme
 
 
 user_repo = UserRepository()
 database = PostgresDatabase()
+profession_repo = ProfessionRepository()
+competence_repo = CompetenceRepository()
 
 AUTH_EXCEPTION_MESSAGE = "Невозможно проверить данные для авторизации"
 
 
 async def get_current_user(
-        token: Annotated[str, Depends(oauth2_scheme)],
+    token: Annotated[str, Depends(oauth2_scheme)],
 ):
     try:
         payload = jwt.decode(
@@ -51,5 +59,5 @@ def check_for_admin_access(user: UserSchema) -> None:
     if not user.is_admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Только админ имеет права добавлять/изменять/удалять данные."
+            detail="Только админ имеет права добавлять/изменять/удалять данные.",
         )
