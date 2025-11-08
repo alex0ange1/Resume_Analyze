@@ -1,12 +1,8 @@
-from datetime import datetime
-from enum import unique
-from typing import Any
-
-from sqlalchemy import ForeignKey, false
+from sqlalchemy import false
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
-from project.infrastructure.postgres.database import Base
+from infrastructure.postgres.database import Base
 
 
 class User(Base):

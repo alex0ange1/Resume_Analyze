@@ -1,20 +1,17 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from project.api.depends import (
-    check_for_admin_access,
+from api.depends import (
     database,
     get_current_user,
     profession_repo,
 )
-from project.core.exceptions import (
-    ProfessionAlreadyExists,
-    ProfessionNotFound,
+from core.exceptions import (
     CompetenceNotFound,
     InvalidCompetencyLevel,
+    ProfessionAlreadyExists,
+    ProfessionNotFound,
 )
-from project.schemas.profession import ProfessionCreateUpdateSchema, ProfessionSchema
-from project.schemas.user import UserSchema
-
+from schemas.profession import ProfessionCreateUpdateSchema, ProfessionSchema
 
 profession_router = APIRouter()
 
@@ -56,12 +53,11 @@ async def get_profession_by_id(
     "/add_profession",
     response_model=ProfessionSchema,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(get_current_user)],
 )
 async def add_profession(
     profession_dto: ProfessionCreateUpdateSchema,
-    current_user: UserSchema = Depends(get_current_user),
 ) -> ProfessionSchema:
-    check_for_admin_access(user=current_user)
     try:
         async with database.session() as session:
             new_profession = await profession_repo.create_profession(
@@ -88,13 +84,12 @@ async def add_profession(
     "/update_profession/{profession_id}",
     response_model=ProfessionSchema,
     status_code=status.HTTP_200_OK,
+    dependencies=[Depends(get_current_user)],
 )
 async def update_profession(
     profession_id: int,
     profession_dto: ProfessionCreateUpdateSchema,
-    current_user: UserSchema = Depends(get_current_user),
 ) -> ProfessionSchema:
-    check_for_admin_access(user=current_user)
     try:
         async with database.session() as session:
             updated_profession = await profession_repo.update_profession(
@@ -122,12 +117,11 @@ async def update_profession(
 @profession_router.delete(
     "/delete_profession/{profession_id}",
     status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(get_current_user)],
 )
 async def delete_profession(
     profession_id: int,
-    current_user: UserSchema = Depends(get_current_user),
 ) -> None:
-    check_for_admin_access(user=current_user)
     try:
         async with database.session() as session:
             await profession_repo.delete_profession(

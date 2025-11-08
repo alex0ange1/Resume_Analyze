@@ -1,23 +1,21 @@
-from project.infrastructure.postgres.database import PostgresDatabase
-
+from resource.auth import oauth2_scheme
 from typing import Annotated
 
-from jose import jwt, JWTError
 from fastapi import Depends, HTTPException, status
+from jose import JWTError, jwt
 
-from project.schemas.auth import TokenData
-from project.schemas.user import UserSchema
-from project.core.config import settings
-from project.core.exceptions import CredentialsException
-from project.infrastructure.postgres.repository.user_repo import UserRepository
-from project.infrastructure.postgres.repository.profession_repo import (
-    ProfessionRepository,
-)
-from project.infrastructure.postgres.repository.competence_repo import (
+from core.config import settings
+from core.exceptions import CredentialsException
+from infrastructure.postgres.database import PostgresDatabase
+from infrastructure.postgres.repository.competence_repo import (
     CompetenceRepository,
 )
-from project.resource.auth import oauth2_scheme
-
+from infrastructure.postgres.repository.profession_repo import (
+    ProfessionRepository,
+)
+from infrastructure.postgres.repository.user_repo import UserRepository
+from schemas.auth import TokenData
+from schemas.user import UserSchema
 
 user_repo = UserRepository()
 database = PostgresDatabase()

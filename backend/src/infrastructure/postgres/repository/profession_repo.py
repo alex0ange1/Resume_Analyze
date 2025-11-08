@@ -1,18 +1,17 @@
-from typing import Type, Dict
+from typing import Dict, Type
 
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, insert, update, delete
+from sqlalchemy import delete, insert, select, update
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from project.schemas.profession import ProfessionSchema, ProfessionCreateUpdateSchema
-from project.infrastructure.postgres.models import Profession, Competence
-
-from project.core.exceptions import (
-    ProfessionNotFound,
-    ProfessionAlreadyExists,
+from core.exceptions import (
     CompetenceNotFound,
     InvalidCompetencyLevel,
+    ProfessionAlreadyExists,
+    ProfessionNotFound,
 )
+from infrastructure.postgres.models import Competence, Profession
+from schemas.profession import ProfessionCreateUpdateSchema, ProfessionSchema
 
 
 class ProfessionRepository:

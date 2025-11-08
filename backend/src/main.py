@@ -5,11 +5,11 @@ import uvicorn
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
-from project.api.auth_routes import auth_router
-from project.api.profession_routes import profession_router
-from project.api.user_routes import user_router
-from project.core.config import settings
-from project.api.competence_routes import competence_router
+from api.auth_routes import auth_router
+from api.competence_routes import competence_router
+from api.profession_routes import profession_router
+from api.user_routes import user_router
+from core.config import settings
 
 logger = logging.getLogger(__name__)
 

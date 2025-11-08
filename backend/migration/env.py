@@ -17,9 +17,9 @@ from alembic import context
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
-from project.core.config import settings
-from project.infrastructure.postgres.database import metadata
-from project.infrastructure.postgres.models import *  # noqa
+from core.config import settings
+from infrastructure.postgres.database import metadata
+from infrastructure.postgres.models import *  # noqa
 
 CREATE_SCHEMA_QUERY = f"CREATE SCHEMA IF NOT EXISTS {settings.POSTGRES_SCHEMA};"
 
@@ -87,7 +87,9 @@ def do_run_migrations(connection):
 
 
 @retry(
-    wait=wait_exponential(multiplier=1, min=settings.POSTGRES_RECONNECT_INTERVAL_SEC, max=10),
+    wait=wait_exponential(
+        multiplier=1, min=settings.POSTGRES_RECONNECT_INTERVAL_SEC, max=10
+    ),
     before_sleep=before_sleep_log(logger, logging.ERROR),
 )
 async def run_migrations_online(engine: AsyncEngine):

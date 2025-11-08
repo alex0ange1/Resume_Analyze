@@ -1,18 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from project.api.depends import (
-    check_for_admin_access,
+from api.depends import (
+    competence_repo,
     database,
     get_current_user,
-    competence_repo,
 )
-from project.core.exceptions import (
+from core.exceptions import (
     CompetenceAlreadyExists,
     CompetenceNotFound,
 )
-from project.schemas.competence import CompetenceCreateUpdateSchema, CompetenceSchema
-from project.schemas.user import UserSchema
-
+from schemas.competence import CompetenceCreateUpdateSchema, CompetenceSchema
 
 competence_router = APIRouter()
 
@@ -54,12 +51,11 @@ async def get_competence_by_id(
     "/add_competence",
     response_model=CompetenceSchema,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(get_current_user)],
 )
 async def add_competence(
     competence_dto: CompetenceCreateUpdateSchema,
-    current_user: UserSchema = Depends(get_current_user),
 ) -> CompetenceSchema:
-    check_for_admin_access(user=current_user)
     try:
         async with database.session() as session:
             new_competence = await competence_repo.create_competence(
@@ -80,13 +76,12 @@ async def add_competence(
     "/update_competence/{competence_id}",
     response_model=CompetenceSchema,
     status_code=status.HTTP_200_OK,
+    dependencies=[Depends(get_current_user)],
 )
 async def update_competence(
     competence_id: int,
     competence_dto: CompetenceCreateUpdateSchema,
-    current_user: UserSchema = Depends(get_current_user),
 ) -> CompetenceSchema:
-    check_for_admin_access(user=current_user)
     try:
         async with database.session() as session:
             updated_competence = await competence_repo.update_competence(
@@ -108,12 +103,11 @@ async def update_competence(
 @competence_router.delete(
     "/delete_competence/{competence_id}",
     status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(get_current_user)],
 )
 async def delete_competence(
     competence_id: int,
-    current_user: UserSchema = Depends(get_current_user),
 ) -> None:
-    check_for_admin_access(user=current_user)
     try:
         async with database.session() as session:
             await competence_repo.delete_competence(

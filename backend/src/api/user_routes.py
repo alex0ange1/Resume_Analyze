@@ -1,10 +1,10 @@
-from fastapi import APIRouter, HTTPException, status, Depends
+from resource.auth import get_password_hash
 
-from project.schemas.user import UserSchema, UserCreateUpdateSchema
+from fastapi import APIRouter, Depends, HTTPException, status
 
-from project.core.exceptions import UserNotFound, UserAlreadyExists
-from project.api.depends import database, user_repo, get_current_user, check_for_admin_access
-from project.resource.auth import get_password_hash
+from api.depends import check_for_admin_access, database, get_current_user, user_repo
+from core.exceptions import UserAlreadyExists, UserNotFound
+from schemas.user import UserCreateUpdateSchema, UserSchema
 
 user_router = APIRouter()
 
@@ -13,7 +13,7 @@ user_router = APIRouter()
     "/all_users",
     response_model=list[UserSchema],
     status_code=status.HTTP_200_OK,
-#    dependencies=[Depends(get_current_user)],
+    dependencies=[Depends(get_current_user)],
 )
 async def get_all_users() -> list[UserSchema]:
     async with database.session() as session:
@@ -26,10 +26,10 @@ async def get_all_users() -> list[UserSchema]:
     "/user/{user_id}",
     response_model=UserSchema,
     status_code=status.HTTP_200_OK,
-#    dependencies=[Depends(get_current_user)],
+    dependencies=[Depends(get_current_user)],
 )
 async def get_user_by_id(
-        user_id: int,
+    user_id: int,
 ) -> UserSchema:
     try:
         async with database.session() as session:
@@ -46,10 +46,10 @@ async def get_user_by_id(
     status_code=status.HTTP_201_CREATED,
 )
 async def add_user(
-        user_dto: UserCreateUpdateSchema,
- #       current_user: UserSchema = Depends(get_current_user),
+    user_dto: UserCreateUpdateSchema,
+    current_user: UserSchema = Depends(get_current_user),
 ) -> UserSchema:
-#    check_for_admin_access(user=current_user)
+    check_for_admin_access(user=current_user)
     try:
         async with database.session() as session:
             user_dto.password = get_password_hash(password=user_dto.password)
@@ -66,9 +66,9 @@ async def add_user(
     status_code=status.HTTP_200_OK,
 )
 async def update_user(
-        user_id: int,
-        user_dto: UserCreateUpdateSchema,
-        current_user: UserSchema = Depends(get_current_user),
+    user_id: int,
+    user_dto: UserCreateUpdateSchema,
+    current_user: UserSchema = Depends(get_current_user),
 ) -> UserSchema:
     check_for_admin_access(user=current_user)
     try:
@@ -90,8 +90,8 @@ async def update_user(
     status_code=status.HTTP_204_NO_CONTENT,
 )
 async def delete_user(
-        user_id: int,
-        current_user: UserSchema = Depends(get_current_user),
+    user_id: int,
+    current_user: UserSchema = Depends(get_current_user),
 ) -> None:
     check_for_admin_access(user=current_user)
     try:

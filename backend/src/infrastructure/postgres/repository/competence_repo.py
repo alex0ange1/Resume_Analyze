@@ -1,16 +1,15 @@
 from typing import Type
 
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, insert, update, delete
+from sqlalchemy import delete, insert, select, update
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from project.schemas.competence import CompetenceSchema, CompetenceCreateUpdateSchema
-from project.infrastructure.postgres.models import Competence
-
-from project.core.exceptions import (
-    CompetenceNotFound,
+from core.exceptions import (
     CompetenceAlreadyExists,
+    CompetenceNotFound,
 )
+from infrastructure.postgres.models import Competence
+from schemas.competence import CompetenceCreateUpdateSchema, CompetenceSchema
 
 
 class CompetenceRepository:

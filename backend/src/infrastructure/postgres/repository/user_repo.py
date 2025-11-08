@@ -1,13 +1,12 @@
 from typing import Type
 
+from sqlalchemy import delete, insert, select, true, update
+from sqlalchemy.exc import IntegrityError, InterfaceError
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import text, select, insert, update, delete, true
-from sqlalchemy.exc import IntegrityError, PendingRollbackError, InterfaceError
 
-from project.schemas.user import UserSchema, UserCreateUpdateSchema
-from project.infrastructure.postgres.models import User
-
-from project.core.exceptions import UserNotFound, UserAlreadyExists
+from core.exceptions import UserAlreadyExists, UserNotFound
+from infrastructure.postgres.models import User
+from schemas.user import UserCreateUpdateSchema, UserSchema
 
 
 class UserRepository:

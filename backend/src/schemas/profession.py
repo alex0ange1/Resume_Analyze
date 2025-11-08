@@ -1,6 +1,8 @@
 from typing import Dict
-from pydantic import BaseModel, Field, ConfigDict, field_validator
-from project.core.exceptions import InvalidCompetencyLevel
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+from core.exceptions import InvalidCompetencyLevel
 
 
 class ProfessionCreateUpdateSchema(BaseModel):
