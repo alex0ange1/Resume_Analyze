@@ -1,0 +1,29 @@
+.wrapper {
+    max-width: 600px;
+    margin: auto;
+}
+
+h2 {
+    font-size: 50px;
+}
+
+input {
+    padding: 10px;
+    border: none;
+    border-radius: 10px;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.btn_not_acc {
+    background: none;
+    text-decoration: underline;
+}
+
+.text_not_acc {
+    margin-top: 20px;
+}
