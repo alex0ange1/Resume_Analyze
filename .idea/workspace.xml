@@ -3,15 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="f69baa34-ab30-4ac5-af2c-78a77534d522" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/model/data/final_model/config.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/model/data/final_model/model.safetensors" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/model/data/final_model/special_tokens_map.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/model/data/final_model/tokenizer.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/model/data/final_model/tokenizer_config.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/model/data/final_model/training_args.bin" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/model/data/final_model/vocab.txt" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -210,7 +201,7 @@
       <workItem from="1762548875951" duration="2699000" />
       <workItem from="1762938707907" duration="5667000" />
       <workItem from="1763226298487" duration="6292000" />
-      <workItem from="1763721881309" duration="8840000" />
+      <workItem from="1763721881309" duration="8990000" />
     </task>
     <servers />
   </component>
