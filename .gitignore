@@ -210,3 +210,5 @@ rubert-competency/
 tokenized_dataset/
 final_model/
 .DS_Store
+**/.DS_Store
+.idea/
