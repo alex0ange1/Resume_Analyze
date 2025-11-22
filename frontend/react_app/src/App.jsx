@@ -1,13 +1,17 @@
-import React from 'react';
-import './App.css';
+import './App.css'
+import { Route, Routes, Navigate } from 'react-router-dom';
 
-function App() {
-  return (
-    <div className="App">
-      <h1>AI-HR Frontend</h1>
-      <p>Frontend application will be developed here</p>
-    </div>
-  );
+import Analyse from './pages/Analyse';
+import Authorization from './pages/Authorization';
+
+
+export default function App() {
+    const isAuthenticated = !!localStorage.getItem('token')
+    
+    return (
+        <Routes>
+            <Route path="/" element={isAuthenticated ? <Analyse /> : <Navigate to='/login' />} />
+            <Route path="/login" element={<Authorization />} />
+        </Routes>
+    )
 }
-
-export default App;
