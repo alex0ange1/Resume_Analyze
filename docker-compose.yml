@@ -21,6 +21,7 @@ services:
   backend:
     depends_on:
       - postgres
+      - ml_service
     image: fastapi_app
     volumes:
       - ./backend/src:/backend/src
@@ -36,6 +37,21 @@ services:
       dockerfile: Dockerfile
     pull_policy: build
     entrypoint: sh -c "./src/start.sh"
+    environment:
+      - ML_SERVICE_URL=http://ml_service:8000
+
+  ml_service:
+    build:
+      context: ./model
+      dockerfile: Dockerfile
+    networks:
+      - local_network
+    ports:
+      - '127.0.0.1:8030:8000'
+    environment:
+      - PYTHONPATH=/app
+    volumes:
+      - ./model/src:/app/src
 
 
 networks:
@@ -45,7 +61,6 @@ networks:
     ipam:
       config:
         - subnet: 192.16.0.0/16
-
 
 volumes:
   db_data:
