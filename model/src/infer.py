@@ -1,8 +1,8 @@
 import torch
 from pathlib import Path
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
-from data.profession_matrix import professions_dict
-from src.keyword_detector import check_all_competencies
+from model.data.profession_matrix import professions_dict
+from model.src.keyword_detector import check_all_competencies
 import logging
 
 logger = logging.getLogger(__name__)
@@ -33,8 +33,8 @@ def load_model():
     global model, tokenizer
 
     try:
-        model_path = Path("/app/data/final_model")  # Путь в контейнере
-
+        #model_path = Path("/app/data/final_model")  # Путь в контейнере
+        model_path = Path("/Users/alexandro/Desktop/Resume_Analyze/model/final_model")
         logger.info(f"Loading model from: {model_path}")
 
         tokenizer = AutoTokenizer.from_pretrained(model_path)

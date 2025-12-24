@@ -1,4 +1,9 @@
 from pydantic import SecretStr
+from dotenv import load_dotenv
+import os
+
+# Явно укажите абсолютный путь к .env
+load_dotenv('/Users/alexandro/Desktop/Resume_Analyze/backend/.env')
 from pydantic_settings import BaseSettings
 
 
