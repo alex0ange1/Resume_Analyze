@@ -66,7 +66,6 @@ async def register_user(user_dto: UserRegisterCreateUpdateSchema) -> None:
     try:
         async with database.session() as session:
             user = UserCreateUpdateSchema(
-                login=user_dto.login,
                 email=user_dto.email,
                 password=get_password_hash(password=user_dto.password),
             )

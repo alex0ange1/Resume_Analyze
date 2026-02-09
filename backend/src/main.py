@@ -9,7 +9,6 @@ from api.auth_routes import auth_router
 from api.competence_routes import competence_router
 from api.profession_routes import profession_router
 from api.user_routes import user_router
-from api.ml_routes import ml_router
 from core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -27,7 +26,7 @@ def create_app() -> FastAPI:
 
     app = FastAPI(root_path=settings.ROOT_PATH, **app_options)
     app.add_middleware(
-        CORSMiddleware,  # type: ignore
+        CORSMiddleware,
         allow_origins=settings.ORIGINS,
         allow_credentials=True,
         allow_methods=["*"],
@@ -40,15 +39,13 @@ def create_app() -> FastAPI:
     app.include_router(profession_router, tags=["Profession"])
     app.include_router(competence_router, tags=["Competence"])
 
-    app.include_router(ml_router, tags=["ML"])
-
     return app
 
 
 app = create_app()
 
 
-async def run() -> None:
+async def main_run() -> None:
     config = uvicorn.Config("main:app", host="0.0.0.0", port=8000, reload=False)
     server = uvicorn.Server(config=config)
     tasks = (asyncio.create_task(server.serve()),)
@@ -58,5 +55,4 @@ async def run() -> None:
 
 if __name__ == "__main__":
     logger.debug(f"{settings.postgres_url}=")
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(run())
+    asyncio.run(main_run())

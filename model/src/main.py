@@ -1,9 +1,9 @@
 import logging
+from typing import Any, Dict, List
+
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from typing import Dict, List, Any
 
-# Импортируем функцию оценки из вашего существующего кода
 from .infer import full_evaluation
 
 logging.basicConfig(level=logging.INFO)
