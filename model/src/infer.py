@@ -28,25 +28,28 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # model.eval()
 
 
+import os
+from pathlib import Path
+
 def load_model():
-    """Загружает модель при старте сервиса"""
     global model, tokenizer
-
     try:
-        #model_path = Path("/app/data/final_model")  # Путь в контейнере
-        model_path = Path("/Users/alexandro/Desktop/Resume_Analyze/model/final_model")
-        logger.info(f"Loading model from: {model_path}")
+        base_dir = Path(__file__).resolve().parent.parent  # .../model
+        model_path = Path(
+            os.getenv("MODEL_PATH", str(base_dir / "data" / "final_model"))
+        )
 
+        if not model_path.exists():
+            raise FileNotFoundError(f"Model path not found: {model_path}")
+
+        logger.info(f"Loading model from: {model_path}")
         tokenizer = AutoTokenizer.from_pretrained(model_path)
         model = AutoModelForSequenceClassification.from_pretrained(model_path)
         model.to(device)
         model.eval()
-
         logger.info("Model loaded successfully")
-
     except Exception as e:
         logger.error(f"Error loading model: {str(e)}")
-        # Если модель не загрузилась, сервис будет работать в режиме заглушки
         logger.warning("Model not loaded, using fallback mode")
 
 
@@ -128,12 +131,10 @@ def full_evaluation(resume_text, profession):
     # 3. Объединяем уровни: берем максимум из модели и keyword detector
     final_levels = {}
     for comp in competencies:
-        if keyword_levels.get(comp, 0) > 0:
-            final_levels[comp] = max(
-                model_levels.get(comp, 0), keyword_levels.get(comp, 0)
-            )
-        else:
-            final_levels[comp] = 0  # если keyword_detector не нашел, ставим 0
+        final_levels[comp] = max(
+            model_levels.get(comp, 0),
+            keyword_levels.get(comp, 0),
+        )
 
     # 4. Оценка соответствия
     evaluation = evaluate_candidate(final_levels, profession, professions_dict)
