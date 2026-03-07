@@ -6,6 +6,7 @@ from jose import JWTError, jwt
 
 from core.config import settings
 from core.exceptions import CredentialsException
+from infrastructure.grpc.ml_client import MLServiceClient
 from infrastructure.postgres.database import PostgresDatabase
 from infrastructure.postgres.repository.competence_repo import (
     CompetenceRepository,
@@ -21,6 +22,7 @@ user_repo = UserRepository()
 database = PostgresDatabase()
 profession_repo = ProfessionRepository()
 competence_repo = CompetenceRepository()
+ml_client = MLServiceClient()
 
 AUTH_EXCEPTION_MESSAGE = "Невозможно проверить данные для авторизации"
 

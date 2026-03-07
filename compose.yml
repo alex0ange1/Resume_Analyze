@@ -18,6 +18,7 @@ services:
   backend:
     depends_on:
       - postgres
+      - ml_service
     env_file:
       - .env
     networks:
@@ -26,6 +27,17 @@ services:
       - 8020:8000
     build:
       context: ./backend
+    entrypoint: /app/src/start.sh
+
+  ml_service:
+    volumes:
+      - ./model/data:/app/data
+    networks:
+      - resume_analyze_network
+    ports:
+      - 50051:50051
+    build: 
+      context: ./model
     entrypoint: /app/src/start.sh
 
 networks:
