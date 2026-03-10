@@ -4,3 +4,9 @@ pydantic==2.5.0
 torch
 transformers==4.35.0
 python-multipart==0.0.6
+sentence-transformers
+scikit-learn
+joblib
+pandas
+numpy
+tqdm

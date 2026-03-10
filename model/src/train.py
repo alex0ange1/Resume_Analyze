@@ -5,7 +5,9 @@ from transformers import (
     AutoModelForSequenceClassification,
     TrainingArguments,
     Trainer,
-    AutoTokenizer
+    AutoTokenizer,
+    EarlyStoppingCallback,
+    set_seed,
 )
 import numpy as np
 from sklearn.metrics import accuracy_score, f1_score
@@ -17,7 +19,7 @@ NUM_LABELS = 3   # классы: 0,1,2
 
 def compute_metrics(pred):
     logits, labels = pred
-    preds = np.argmax(logits, axis=1)
+    preds = np.argmax(logits, axis=-1)
 
     acc = accuracy_score(labels, preds)
     f1_macro = f1_score(labels, preds, average="macro")
@@ -29,6 +31,8 @@ def compute_metrics(pred):
 
 
 def main():
+    set_seed(42)
+
     base_dir = Path(__file__).resolve().parent.parent
     data_dir = base_dir / "data"
     tokenized_dir = data_dir / "tokenized_dataset"
@@ -50,7 +54,7 @@ def main():
 
     # 3️⃣ Class Weights на основе тренировочного датасета
     # Class weights на основе тренировочного датасета
-    labels = np.array(train_dataset["labels"])
+    labels = np.asarray(train_dataset["labels"], dtype=np.int64)
     min_label = labels.min()
     labels = labels - min_label
 
@@ -58,6 +62,8 @@ def main():
     val_dataset = val_dataset.map(lambda x: {"labels": x["labels"] - min_label})
 
     class_counts = np.bincount(labels, minlength=NUM_LABELS)
+    # Если какой-то класс не встретился, чтобы не получить division by zero
+    class_counts = np.where(class_counts == 0, 1, class_counts)
     class_weights = 1.0 / class_counts
     class_weights = class_weights / class_weights.sum() * NUM_LABELS
 
@@ -65,20 +71,23 @@ def main():
     class_weights = torch.tensor(class_weights, dtype=torch.float)
     print(f"Class weights = {class_weights}")
 
-    # передаём веса в loss через Trainer
-    def custom_loss(model, inputs, return_outputs=False, **kwargs):
-        labels = inputs["labels"]
-        outputs = model(**inputs)
-        logits = outputs.logits
+    # Передаём веса в loss корректно, переопределяя compute_loss
+    class WeightedTrainer(Trainer):
+        def compute_loss(self, model, inputs, return_outputs=False, **kwargs):
+            labels = inputs.get("labels")
+            outputs = model(**inputs)
+            logits = outputs.logits
 
-        loss_fct = torch.nn.CrossEntropyLoss(weight=class_weights.to(logits.device))
-        loss = loss_fct(logits, labels)
+            if labels is None:
+                raise ValueError("labels is required for compute_loss")
 
-        if return_outputs:
-            # Trainer хочет вернуть (loss, outputs)
-            return loss, outputs
+            labels = labels.long()
+            loss_fct = torch.nn.CrossEntropyLoss(weight=class_weights.to(logits.device))
+            loss = loss_fct(logits, labels)
 
-        return loss
+            if return_outputs:
+                return loss, outputs
+            return loss
 
     # 4️⃣ Папка для чекпоинтов
     checkpoints_dir = data_dir / "checkpoints"
@@ -90,28 +99,32 @@ def main():
         eval_strategy="epoch",
         save_strategy="epoch",
         logging_steps=50,
-        learning_rate=3e-5,
-        per_device_train_batch_size=16,
-        per_device_eval_batch_size=16,
-        num_train_epochs=5,
+        learning_rate=2e-5,
+        lr_scheduler_type="cosine",
+        warmup_ratio=0.1,
+        per_device_train_batch_size=8,
+        per_device_eval_batch_size=8,
+        gradient_accumulation_steps=2,
+        num_train_epochs=8,
         weight_decay=0.01,
         load_best_model_at_end=True,
+        metric_for_best_model="f1_macro",
+        greater_is_better=True,
         save_total_limit=3,
+        report_to="none",
         fp16=torch.cuda.is_available(),  # включаем AMP, если есть GPU
     )
 
     # 6️⃣ Trainer
-    trainer = Trainer(
+    trainer = WeightedTrainer(
         model=model,  # оставить только это
         args=training_args,
         train_dataset=train_dataset,
         eval_dataset=val_dataset,
         tokenizer=tokenizer,
         compute_metrics=compute_metrics,
+        callbacks=[EarlyStoppingCallback(early_stopping_patience=2)],
     )
-
-    # костыль для custom_loss: overriding trainer.compute_loss
-    trainer.compute_loss = custom_loss
 
     # 7️⃣ Старт обучения
     trainer.train()

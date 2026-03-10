@@ -16,6 +16,15 @@ def main():
     # 1️⃣ Загружаем CSV
     df = pd.read_csv(csv_path)
 
+    # 1.1 Очистка текстовых полей
+    df["resume_text"] = df["resume_text"].fillna("").astype(str).str.strip()
+    df["competency"] = df["competency"].fillna("").astype(str).str.strip()
+    # 1.2 Удаляем пустые строки
+    df = df[(df["resume_text"] != "") & (df["competency"] != "")]
+    # 1.3 Удаляем полные дубликаты записи
+    df = df.drop_duplicates(subset=["competency", "resume_text", "level"]).reset_index(drop=True)
+    print(f"Rows after cleaning: {len(df)}")
+
     # 2️⃣ Убираем класс 0 (нет в обучении)
     df = df[df["level"] != 0]
 
