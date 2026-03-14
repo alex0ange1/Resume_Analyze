@@ -15,7 +15,7 @@ resume_router = APIRouter()
 
 
 @resume_router.post(
-    "/resume/analyze",
+    "/resumes/analyze",
     response_model=dict,
     status_code=status.HTTP_200_OK,
     dependencies=[Depends(get_current_user)],

@@ -17,7 +17,7 @@ profession_router = APIRouter()
 
 
 @profession_router.get(
-    "/all_professions",
+    "/professions",
     response_model=list[ProfessionSchema],
     status_code=status.HTTP_200_OK,
     dependencies=[Depends(get_current_user)],
@@ -30,7 +30,7 @@ async def get_all_professions() -> list[ProfessionSchema]:
 
 
 @profession_router.get(
-    "/profession/{profession_id}",
+    "/professions/{profession_id}",
     response_model=ProfessionSchema,
     status_code=status.HTTP_200_OK,
     dependencies=[Depends(get_current_user)],
@@ -50,7 +50,7 @@ async def get_profession_by_id(
 
 
 @profession_router.post(
-    "/add_profession",
+    "/professions",
     response_model=ProfessionSchema,
     status_code=status.HTTP_201_CREATED,
     dependencies=[Depends(get_current_user)],
@@ -81,7 +81,7 @@ async def add_profession(
 
 
 @profession_router.put(
-    "/update_profession/{profession_id}",
+    "/professions/{profession_id}",
     response_model=ProfessionSchema,
     status_code=status.HTTP_200_OK,
     dependencies=[Depends(get_current_user)],
@@ -115,7 +115,7 @@ async def update_profession(
 
 
 @profession_router.delete(
-    "/delete_profession/{profession_id}",
+    "/professions/{profession_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     dependencies=[Depends(get_current_user)],
 )
