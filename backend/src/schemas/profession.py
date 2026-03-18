@@ -2,8 +2,6 @@ from typing import Dict
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from core.exceptions import InvalidCompetencyLevel
-
 
 class ProfessionCreateUpdateSchema(BaseModel):
     name: str
@@ -23,7 +21,9 @@ class ProfessionCreateUpdateSchema(BaseModel):
             if not isinstance(competence_id, int) or competence_id <= 0:
                 raise ValueError("Competence IDs must be positive integers")
             if level not in (1, 2, 3):
-                raise InvalidCompetencyLevel(level=level)
+                raise ValueError(
+                    f"Уровень компетенции должен быть от 1 до 3, получено: {level}"
+                )
 
         return v
 
