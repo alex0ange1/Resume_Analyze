@@ -209,6 +209,8 @@ data/checkpoints/
 rubert-competency/
 tokenized_dataset/
 final_model/
+model/data/final_model_sbert/
+model/data/final_model_meta/
 .DS_Store
 **/.DS_Store
 .idea/

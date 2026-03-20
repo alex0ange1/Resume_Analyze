@@ -29,7 +29,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 import os
-from pathlib import Path
+
 
 def load_model():
     global model, tokenizer
@@ -53,10 +53,19 @@ def load_model():
         logger.warning("Model not loaded, using fallback mode")
 
 
+# Загружаем модель до любого кода, который её использует (в т.ч. if __name__ == "__main__")
+load_model()
+
+
 # -----------------------------
 # Функция инференса модели
 # -----------------------------
 def predict_resume_model(resume_text, competencies_list):
+    if tokenizer is None or model is None:
+        raise RuntimeError(
+            "Модель не загружена (tokenizer/model is None). "
+            "Проверь путь MODEL_PATH или наличие model/data/final_model после train.py."
+        )
     results = {}
     for comp in competencies_list:
         inputs = tokenizer(
@@ -118,23 +127,23 @@ def evaluate_candidate(
 def full_evaluation(resume_text, profession):
     competencies = list(professions_dict[profession].keys())
 
-    # 1. Предсказание модели
-    model_levels = predict_resume_model(resume_text, competencies)
+    # 1. Сначала keyword: нет упоминания → уровень 0 (модель для этой компетенции не используем).
+    keyword_hits = check_all_competencies(resume_text)
 
-    # 2. Проверка ключевых слов
-    keyword_levels = {
-        comp: int(found)
-        for comp, found in check_all_competencies(resume_text).items()
-        if comp in competencies
-    }
+    # 2. Модель только по компетенциям, где keyword нашёл сигнал (классы 0, 1, 2 — как при обучении).
+    comps_with_signal = [c for c in competencies if keyword_hits.get(c, False)]
+    model_levels = (
+        predict_resume_model(resume_text, comps_with_signal)
+        if comps_with_signal
+        else {}
+    )
 
-    # 3. Объединяем уровни: берем максимум из модели и keyword detector
     final_levels = {}
     for comp in competencies:
-        final_levels[comp] = max(
-            model_levels.get(comp, 0),
-            keyword_levels.get(comp, 0),
-        )
+        if not keyword_hits.get(comp, False):
+            final_levels[comp] = 0
+        else:
+            final_levels[comp] = model_levels.get(comp, 0)
 
     # 4. Оценка соответствия
     evaluation = evaluate_candidate(final_levels, profession, professions_dict)
@@ -145,20 +154,17 @@ def full_evaluation(resume_text, profession):
 # -----------------------------
 # Пример использования
 # -----------------------------
-# if __name__ == "__main__":
-#     test_resume = "Опыт работы с Python, PyTorch, SQL. Реализовывал модели машинного обучения и обрабатывал данные."
-#     profession = "Data Scientist"
-#
-#     result = full_evaluation(test_resume, profession)
-#
-#     print("Уровни компетенций:")
-#     for comp, level in result["final_levels"].items():
-#         print(f"- {comp}: {level}")
-#
-#     print(f"\nПроцент соответствия: {result['evaluation']['match_percent']:.2f}%")
-#     print("Недостающие навыки:")
-#     for skill in result['evaluation']['missing_skills']:
-#         print(f"- {skill['name']}: требуется {skill['required_level']}, есть {skill['candidate_level']}")
+if __name__ == "__main__":
+    test_resume = "Опыт работы с Python, PyTorch, SQL. Реализовывал модели машинного обучения и обрабатывал данные."
+    profession = "Data Scientist"
 
-# Загружаем модель при импорте
-load_model()
+    result = full_evaluation(test_resume, profession)
+
+    print("Уровни компетенций:")
+    for comp, level in result["final_levels"].items():
+        print(f"- {comp}: {level}")
+
+    print(f"\nПроцент соответствия: {result['evaluation']['match_percent']:.2f}%")
+    print("Недостающие навыки:")
+    for skill in result['evaluation']['missing_skills']:
+        print(f"- {skill['name']}: требуется {skill['required_level']}, есть {skill['candidate_level']}")
