@@ -6,7 +6,7 @@ from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, status
 
-from api.depends import get_current_user, ml_client
+from api.depends import get_current_user, ml_client, database, profession_repo
 from services.resume_parser import ResumeParser
 
 logger = logging.getLogger(__name__)
@@ -31,6 +31,29 @@ async def analyze_resume(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Неподдерживаемый формат файла. Разрешены: {', '.join(allowed_extensions)}",
+        )
+
+    try:
+        async with database.session() as session:
+            profession_obj = await profession_repo.get_profession_by_name(
+                session=session, name=profession
+            )
+
+            if not profession_obj:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Профессия '{profession}' не найдена в базе данных. Доступные профессии можно посмотреть в разделе 'Профессии'.",
+                )
+
+            logger.info(f"Profession '{profession}' found with ID: {profession_obj.id}")
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error checking profession existence: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Ошибка при проверке профессии: {str(e)}",
         )
 
     try:
