@@ -1,6 +1,6 @@
 import logging
 import grpc
-from typing import Optional
+from typing import Optional, List
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from proto import ml_service_pb2, ml_service_pb2_grpc
@@ -32,18 +32,38 @@ class MLServiceClient:
         reraise=True,
     )
     async def evaluate_resume(
-        self, resume_text: str, profession: str
+        self,
+        resume_text: str,
+        target_profession: ml_service_pb2.Profession,
+        all_professions: List[ml_service_pb2.Profession],
     ) -> ml_service_pb2.ResumeResponse:
+        """
+        Отправляет запрос в ML сервис для анализа резюме по всем профессиям
+
+        Args:
+            resume_text: текст резюме
+            target_profession: целевая профессия в protobuf формате
+            all_professions: список всех профессий в protobuf формате
+
+        Returns:
+            ResumeResponse от ML сервиса
+        """
         if not self.stub:
             await self.connect()
 
         request = ml_service_pb2.ResumeRequest(
-            resume_text=resume_text, profession=profession
+            resume_text=resume_text,
+            target_profession=target_profession,
+            all_professions=all_professions,
         )
 
         try:
             response = await self.stub.EvaluateResume(request)
-            logger.info(f"Successfully evaluated resume for profession: {profession}")
+            logger.info(
+                f"Successfully evaluated resume. "
+                f"Target: {response.target_result.name} ({response.target_result.match_percent:.1f}%), "
+                f"Is best: {response.is_target_best}"
+            )
             return response
         except grpc.RpcError as e:
             logger.error(f"gRPC error: {e.code()} - {e.details()}")
