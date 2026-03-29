@@ -9,6 +9,7 @@ from api.auth_routes import auth_router
 from api.competence_routes import competence_router
 from api.profession_routes import profession_router
 from api.user_routes import user_router
+from api.resume_routes import resume_router
 from core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -38,6 +39,7 @@ def create_app() -> FastAPI:
 
     app.include_router(profession_router, tags=["Profession"])
     app.include_router(competence_router, tags=["Competence"])
+    app.include_router(resume_router, tags=["Resumes"])
 
     return app
 

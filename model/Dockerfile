@@ -2,14 +2,16 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Копируем зависимости сначала для кэширования
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
 
-# Копируем исходный код модели и данные
+RUN pip install grpcio grpcio-tools
+
 COPY src/ ./src/
 COPY data/ ./data/
 
-EXPOSE 8000
+ENV PYTHONPATH ./src
 
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
+RUN chmod +x ./src/start.sh

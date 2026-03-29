@@ -30,7 +30,6 @@ class PostgresDatabase:
                 raise
 
 
-database = PostgresDatabase()
 metadata = MetaData(schema=settings.POSTGRES_SCHEMA)
 
 
