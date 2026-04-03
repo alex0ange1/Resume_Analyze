@@ -1,92 +1,42 @@
-import torch
+import logging
+import os
 from pathlib import Path
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
+
 from model.data.profession_matrix import professions_dict
 from model.src.keyword_detector import check_all_competencies
-import logging
+from model.src.infer_stacking import StackingInference
 
 logger = logging.getLogger(__name__)
 
 # -----------------------------
-# Параметры
+# Stacking: ruBERT + SBERT + meta LogisticRegression
 # -----------------------------
-model = None
-tokenizer = None
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-# BASE_DIR = Path(__file__).resolve().parent.parent
-# OUTPUT_DIR = BASE_DIR / "data" / "rubert-competency"
-# device = (
-#     torch.device("mps") if torch.backends.mps.is_available() else torch.device("cpu")
-# )
-
-# -----------------------------
-# Загружаем модель и токенизатор
-# -----------------------------
-# tokenizer = AutoTokenizer.from_pretrained(OUTPUT_DIR)
-# model = AutoModelForSequenceClassification.from_pretrained(OUTPUT_DIR)
-# model.to(device)
-# model.eval()
+_stacker: StackingInference | None = None
 
 
-import os
+def _get_stacker() -> StackingInference:
+    global _stacker
+    if _stacker is None:
+        base_dir = Path(__file__).resolve().parent.parent
+        if os.getenv("MODEL_BASE_DIR"):
+            base_dir = Path(os.environ["MODEL_BASE_DIR"])
+        _stacker = StackingInference(base_dir=base_dir)
+        logger.info("StackingInference loaded (ruBERT + SBERT + meta)")
+    return _stacker
 
 
-def load_model():
-    global model, tokenizer
-    try:
-        base_dir = Path(__file__).resolve().parent.parent  # .../model
-        model_path = Path(
-            os.getenv("MODEL_PATH", str(base_dir / "data" / "final_model"))
-        )
-
-        if not model_path.exists():
-            raise FileNotFoundError(f"Model path not found: {model_path}")
-
-        logger.info(f"Loading model from: {model_path}")
-        tokenizer = AutoTokenizer.from_pretrained(model_path)
-        model = AutoModelForSequenceClassification.from_pretrained(model_path)
-        model.to(device)
-        model.eval()
-        logger.info("Model loaded successfully")
-    except Exception as e:
-        logger.error(f"Error loading model: {str(e)}")
-        logger.warning("Model not loaded, using fallback mode")
-
-
-# Загружаем модель до любого кода, который её использует (в т.ч. if __name__ == "__main__")
-load_model()
-
-
-# -----------------------------
-# Функция инференса модели
-# -----------------------------
-def predict_resume_model(resume_text, competencies_list):
-    if tokenizer is None or model is None:
-        raise RuntimeError(
-            "Модель не загружена (tokenizer/model is None). "
-            "Проверь путь MODEL_PATH или наличие model/data/final_model после train.py."
-        )
+def predict_levels_stacking(resume_text: str, competencies_list: list[str]) -> dict[str, int]:
+    """Уровни 0, 1, 2 — как при обучении (мета-модель)."""
+    stacker = _get_stacker()
     results = {}
     for comp in competencies_list:
-        inputs = tokenizer(
-            resume_text,
-            comp,
-            truncation=True,
-            padding="max_length",
-            max_length=256,
-            return_tensors="pt",
-        )
-        inputs = {k: v.to(device) for k, v in inputs.items()}
-        with torch.no_grad():
-            outputs = model(**inputs)
-            logits = outputs.logits
-            pred_level = int(torch.argmax(logits, dim=-1).item())
-            results[comp] = pred_level
+        out = stacker.predict_level(resume_text, comp)
+        results[comp] = int(out["level"])
     return results
 
 
 # -----------------------------
-# Функция оценки кандидата
+# Оценка кандидата
 # -----------------------------
 def evaluate_candidate(
     candidate_levels: dict, profession: str, professions_dict: dict
@@ -124,16 +74,16 @@ def evaluate_candidate(
 # -----------------------------
 # Полная оценка резюме
 # -----------------------------
-def full_evaluation(resume_text, profession):
+def full_evaluation(resume_text: str, profession: str):
     competencies = list(professions_dict[profession].keys())
 
-    # 1. Сначала keyword: нет упоминания → уровень 0 (модель для этой компетенции не используем).
+    # 1. Keyword: нет упоминания → 0 (stacking не вызываем).
     keyword_hits = check_all_competencies(resume_text)
 
-    # 2. Модель только по компетенциям, где keyword нашёл сигнал (классы 0, 1, 2 — как при обучении).
+    # 2. Stacking только там, где keyword дал сигнал (уровни 0, 1, 2).
     comps_with_signal = [c for c in competencies if keyword_hits.get(c, False)]
     model_levels = (
-        predict_resume_model(resume_text, comps_with_signal)
+        predict_levels_stacking(resume_text, comps_with_signal)
         if comps_with_signal
         else {}
     )
@@ -145,15 +95,11 @@ def full_evaluation(resume_text, profession):
         else:
             final_levels[comp] = model_levels.get(comp, 0)
 
-    # 4. Оценка соответствия
     evaluation = evaluate_candidate(final_levels, profession, professions_dict)
 
     return {"final_levels": final_levels, "evaluation": evaluation}
 
 
-# -----------------------------
-# Пример использования
-# -----------------------------
 if __name__ == "__main__":
     test_resume = "Опыт работы с Python, PyTorch, SQL. Реализовывал модели машинного обучения и обрабатывал данные."
     profession = "Data Scientist"
@@ -166,5 +112,7 @@ if __name__ == "__main__":
 
     print(f"\nПроцент соответствия: {result['evaluation']['match_percent']:.2f}%")
     print("Недостающие навыки:")
-    for skill in result['evaluation']['missing_skills']:
-        print(f"- {skill['name']}: требуется {skill['required_level']}, есть {skill['candidate_level']}")
+    for skill in result["evaluation"]["missing_skills"]:
+        print(
+            f"- {skill['name']}: требуется {skill['required_level']}, есть {skill['candidate_level']}"
+        )
