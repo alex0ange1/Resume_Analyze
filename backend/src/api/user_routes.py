@@ -10,7 +10,7 @@ user_router = APIRouter()
 
 
 @user_router.get(
-    "/all_users",
+    "/users",
     response_model=list[UserSchema],
     status_code=status.HTTP_200_OK,
     dependencies=[Depends(get_current_user)],
@@ -23,7 +23,7 @@ async def get_all_users() -> list[UserSchema]:
 
 
 @user_router.get(
-    "/user/{user_id}",
+    "/users/{user_id}",
     response_model=UserSchema,
     status_code=status.HTTP_200_OK,
     dependencies=[Depends(get_current_user)],
@@ -41,7 +41,7 @@ async def get_user_by_id(
 
 
 @user_router.post(
-    "/add_user",
+    "/users",
     response_model=UserSchema,
     status_code=status.HTTP_201_CREATED,
 )
@@ -61,7 +61,7 @@ async def add_user(
 
 
 @user_router.put(
-    "/update_user/{user_id}",
+    "/users/{user_id}",
     response_model=UserSchema,
     status_code=status.HTTP_200_OK,
 )
@@ -86,7 +86,7 @@ async def update_user(
 
 
 @user_router.delete(
-    "/delete_user/{user_id}",
+    "/users/{user_id}",
     status_code=status.HTTP_204_NO_CONTENT,
 )
 async def delete_user(

@@ -1,0 +1,52 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+    volumes:
+      - resume_analyze_db:/var/lib/postgresql/data
+    env_file:
+      - .env
+    networks:
+      - resume_analyze_network
+    ports:
+      - 5432:5432
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    depends_on:
+      - postgres
+      - ml_service
+    env_file:
+      - .env
+    networks:
+      - resume_analyze_network 
+    ports:
+      - 8020:8000
+    build:
+      context: ./backend
+    entrypoint: /app/src/start.sh
+
+  ml_service:
+    volumes:
+      - ./model/data:/app/data
+    networks:
+      - resume_analyze_network
+    ports:
+      - 50051:50051
+    build: 
+      context: ./model
+    entrypoint: /app/src/start.sh
+
+networks:
+  resume_analyze_network:
+    name: resume_analyze_network 
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.16.0.0/16
+
+volumes:
+  resume_analyze_db:

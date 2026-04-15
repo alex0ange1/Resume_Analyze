@@ -9,7 +9,7 @@ export const add_prof = async (name, competencies) => {
         }
       };
 
-    const response = await apiClient.post('/add_profession', data);
+    const response = await apiClient.post('/professions', data);
     return response.data;
   } catch (error) {
     console.error("Ошибка при добавлении профессий:", error);

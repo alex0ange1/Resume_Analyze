@@ -1,0 +1,14 @@
+{
+  "val_accuracy": 0.7333333333333333,
+  "val_f1_macro": 0.7503607503607505,
+  "num_train": 266,
+  "num_val": 30,
+  "features": [
+    "rubert_p0",
+    "rubert_p1",
+    "rubert_p2",
+    "sbert_p0",
+    "sbert_p1",
+    "sbert_p2"
+  ]
+}

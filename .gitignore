@@ -135,6 +135,7 @@ celerybeat.pid
 *.sage.py
 
 # Environments
+.env
 .envrc
 .venv
 env/
@@ -208,9 +209,9 @@ checkpoints/
 data/checkpoints/
 rubert-competency/
 tokenized_dataset/
-final_model/
 model/data/final_model_sbert/
-model/data/final_model_meta/
+data/final_model_sbert/
+final_model/
 .DS_Store
 **/.DS_Store
 .idea/

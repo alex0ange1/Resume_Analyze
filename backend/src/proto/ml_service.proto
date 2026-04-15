@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package ml_service;
+
+service ResumeAnalyzer {
+    rpc EvaluateResume (ResumeRequest) returns (ResumeResponse);
+}
+
+message ResumeRequest {
+    string resume_text = 1;
+    string profession = 2;
+}
+
+message ResumeResponse {
+    map<string, int32> final_levels = 1;
+    Evaluation evaluation = 2;
+}
+
+message Evaluation {
+    double match_percent = 1;
+    repeated MissingSkill missing_skills = 2;
+}
+
+message MissingSkill {
+    string name = 1;
+    int32 required_level = 2;
+    int32 candidate_level = 3;
+}

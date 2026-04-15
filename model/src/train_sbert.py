@@ -10,7 +10,7 @@ from sklearn.metrics import accuracy_score, classification_report, f1_score
 from sklearn.model_selection import train_test_split
 
 
-SBERT_MODEL_NAME = "ai-forever/sbert_large_nlu_ru"
+SBERT_MODEL_NAME = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 RANDOM_STATE = 42
 
 
@@ -54,6 +54,7 @@ def main():
     y_val = val_df["level"].to_numpy(dtype=np.int64)
 
     encoder = SentenceTransformer(SBERT_MODEL_NAME)
+
     x_train_emb = encoder.encode(
         x_train_text,
         batch_size=64,
@@ -72,10 +73,10 @@ def main():
     clf = LogisticRegression(
         max_iter=2000,
         class_weight="balanced",
+        multi_class="multinomial",
         solver="lbfgs",
         random_state=RANDOM_STATE,
     )
-
     clf.fit(x_train_emb, y_train)
 
     val_pred = clf.predict(x_val_emb)

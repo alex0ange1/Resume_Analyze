@@ -65,13 +65,10 @@ async def login_for_access_token(
 async def register_user(user_dto: UserRegisterCreateUpdateSchema) -> None:
     try:
         async with database.session() as session:
-            # Убедитесь что пароль не слишком длинный
-            password = user_dto.password[:72] if len(user_dto.password) > 72 else user_dto.password
-
             user = UserCreateUpdateSchema(
-                email=user_dto.email,  # используем только email
-                password=get_password_hash(password=password),  # обрезаем если нужно
+                email=user_dto.email,
+                password=get_password_hash(password=user_dto.password),
             )
             await user_repo.create_user(session=session, user=user)
     except BaseException as error:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(error))
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=error.args)

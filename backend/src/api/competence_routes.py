@@ -15,7 +15,7 @@ competence_router = APIRouter()
 
 
 @competence_router.get(
-    "/all_competencies",
+    "/competencies",
     response_model=list[CompetenceSchema],
     status_code=status.HTTP_200_OK,
     dependencies=[Depends(get_current_user)],
@@ -28,7 +28,7 @@ async def get_all_competencies() -> list[CompetenceSchema]:
 
 
 @competence_router.get(
-    "/competence/{competence_id}",
+    "/competencies/{competence_id}",
     response_model=CompetenceSchema,
     status_code=status.HTTP_200_OK,
     dependencies=[Depends(get_current_user)],
@@ -48,7 +48,7 @@ async def get_competence_by_id(
 
 
 @competence_router.post(
-    "/add_competence",
+    "/competencies",
     response_model=CompetenceSchema,
     status_code=status.HTTP_201_CREATED,
     dependencies=[Depends(get_current_user)],
@@ -73,7 +73,7 @@ async def add_competence(
 
 
 @competence_router.put(
-    "/update_competence/{competence_id}",
+    "/competencies/{competence_id}",
     response_model=CompetenceSchema,
     status_code=status.HTTP_200_OK,
     dependencies=[Depends(get_current_user)],
@@ -101,7 +101,7 @@ async def update_competence(
 
 
 @competence_router.delete(
-    "/delete_competence/{competence_id}",
+    "/competencies/{competence_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     dependencies=[Depends(get_current_user)],
 )
