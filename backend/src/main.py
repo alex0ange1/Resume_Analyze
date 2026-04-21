@@ -34,11 +34,11 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    app.include_router(user_router, tags=["User"])
     app.include_router(auth_router, tags=["Auth"])
+    app.include_router(user_router, tags=["Users"])
 
-    app.include_router(profession_router, tags=["Profession"])
-    app.include_router(competence_router, tags=["Competence"])
+    app.include_router(profession_router, tags=["Professions"])
+    app.include_router(competence_router, tags=["Competencies"])
     app.include_router(resume_router, tags=["Resumes"])
 
     return app
