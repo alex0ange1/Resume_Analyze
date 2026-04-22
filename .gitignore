@@ -209,6 +209,7 @@ checkpoints/
 data/checkpoints/
 rubert-competency/
 tokenized_dataset/
+model/data/final_model_sbert/
 final_model/
 .DS_Store
 **/.DS_Store
