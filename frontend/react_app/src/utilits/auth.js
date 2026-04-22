@@ -1,5 +1,7 @@
 import apiClient from './api';
 
+export const verifySession = () => apiClient.get('/competencies');
+
 export const login = async (form) => {
   try {
     const formData = new FormData();

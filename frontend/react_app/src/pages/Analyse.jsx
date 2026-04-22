@@ -5,20 +5,11 @@ import {
   Typography,
   Box,
   TextField,
-  Button,
 } from '@mui/material'
 import FileUpload from '../components/FileUpload'
-import { logout } from '../utilits/auth'
-import { useNavigate } from 'react-router-dom'
 
 const Analyse = () => {
-  const navigate = useNavigate()
   const [professionName, setProfessionName] = useState('')
-
-  const handleLogout = () => {
-    logout()
-    navigate('/login')
-  }
 
   const professionOk = professionName.trim().length > 0
 
@@ -49,12 +40,6 @@ const Analyse = () => {
             <FileUpload professionName={professionName} disabled={!professionOk} />
           </Box>
         </Paper>
-
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
-          <Button variant="contained" onClick={handleLogout}>
-            Выйти из аккаунта
-          </Button>
-        </Box>
       </Container>
     </Box>
   )

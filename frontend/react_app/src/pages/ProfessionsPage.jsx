@@ -18,6 +18,7 @@ import {
 } from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
 import api from '../utilits/api'
+import MessageModal from '../components/MessageModal'
 
 const ProfessionsPage = () => {
   const [name, setName] = useState('')
@@ -26,21 +27,39 @@ const ProfessionsPage = () => {
   const [professions, setProfessions] = useState([])
   const [loading, setLoading] = useState(false)
 
-  const loadCompetences = async () => {
-    const res = await api.get('/competencies')
-    setCompetences(res.data)
+  const [open, setOpen] = useState(false)
+  const [message, setMessage] = useState('')
+  const [type, setType] = useState('info')
+
+  const handleOpen = (msg, t = 'error') => {
+    setMessage(msg)
+    setType(t)
+    setOpen(true)
   }
 
-  const loadProfessions = async () => {
+  const handleClose = () => setOpen(false)
+
+  const loadData = async () => {
     setLoading(true)
-    const res = await api.get('/professions')
-    setProfessions(res.data)
-    setLoading(false)
+    try {
+      const [cRes, pRes] = await Promise.all([
+        api.get('/competencies'),
+        api.get('/professions'),
+      ])
+      setCompetences(Array.isArray(cRes.data) ? cRes.data : [])
+      setProfessions(Array.isArray(pRes.data) ? pRes.data : [])
+    } catch (e) {
+      const msg = e?.response?.data?.detail || e?.message || 'Не удалось загрузить данные'
+      handleOpen(String(msg), 'error')
+      setCompetences([])
+      setProfessions([])
+    } finally {
+      setLoading(false)
+    }
   }
 
   useEffect(() => {
-    loadCompetences()
-    loadProfessions()
+    loadData()
   }, [])
 
   const toggleCompetence = (id) => {
@@ -57,26 +76,38 @@ const ProfessionsPage = () => {
   }
 
   const handleSave = async () => {
-    if (!name.trim()) return alert('Введите название профессии')
-
-    await api.post('/professions', {
-      name,
-      competencies: selected,
-    })
-
-    setName('')
-    setSelected({})
-    loadProfessions()
+    if (!name.trim()) {
+      handleOpen('Введите название профессии', 'warning')
+      return
+    }
+    try {
+      await api.post('/professions', {
+        name,
+        competencies: selected,
+      })
+      setName('')
+      setSelected({})
+      await loadData()
+    } catch (e) {
+      const msg = e?.response?.data?.detail || e?.message || 'Не удалось сохранить'
+      handleOpen(String(msg), 'error')
+    }
   }
 
   const handleDelete = async (id) => {
     if (!window.confirm('Удалить профессию?')) return
-    await api.delete(`/professions/${id}`)
-    loadProfessions()
+    try {
+      await api.delete(`/professions/${id}`)
+      await loadData()
+    } catch (e) {
+      const msg = e?.response?.data?.detail || e?.message || 'Не удалось удалить'
+      handleOpen(String(msg), 'error')
+    }
   }
 
   return (
     <Box sx={{ background: '#F6F8FB', minHeight: 'calc(100vh - 64px)', py: 4 }}>
+      <MessageModal open={open} message={message} type={type} onClose={handleClose} />
       <Container maxWidth="md">
         <Paper sx={{ p: 3, mb: 4 }}>
           <Typography variant="h5" gutterBottom>
