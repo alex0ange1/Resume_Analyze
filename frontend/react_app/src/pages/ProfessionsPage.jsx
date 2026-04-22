@@ -27,13 +27,13 @@ const ProfessionsPage = () => {
   const [loading, setLoading] = useState(false)
 
   const loadCompetences = async () => {
-    const res = await api.get('/all_competencies')
+    const res = await api.get('/competencies')
     setCompetences(res.data)
   }
 
   const loadProfessions = async () => {
     setLoading(true)
-    const res = await api.get('/all_professions')
+    const res = await api.get('/professions')
     setProfessions(res.data)
     setLoading(false)
   }
@@ -59,7 +59,7 @@ const ProfessionsPage = () => {
   const handleSave = async () => {
     if (!name.trim()) return alert('Введите название профессии')
 
-    await api.post('/add_profession', {
+    await api.post('/professions', {
       name,
       competencies: selected,
     })
@@ -71,7 +71,7 @@ const ProfessionsPage = () => {
 
   const handleDelete = async (id) => {
     if (!window.confirm('Удалить профессию?')) return
-    await api.delete(`/delete_profession/${id}`)
+    await api.delete(`/professions/${id}`)
     loadProfessions()
   }
 
