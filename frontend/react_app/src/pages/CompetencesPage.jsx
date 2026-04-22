@@ -38,7 +38,7 @@ const CompetencesPage = () => {
   const loadCompetences = async () => {
     setLoading(true)
     try {
-      const res = await api.get('/all_competencies')
+      const res = await api.get('/competencies')
       setItems(Array.isArray(res.data) ? res.data : [])
     } catch (e) {
       const msg = e?.response?.data?.detail || e?.message || 'Не удалось загрузить компетенции'
@@ -61,7 +61,7 @@ const CompetencesPage = () => {
 
     setBusy(true)
     try {
-      await api.post('/add_competence', { name: trimmed })
+      await api.post('/competencies', { name: trimmed })
       setName('')
       handleOpen('Компетенция добавлена', 'success')
       await loadCompetences()
@@ -79,7 +79,7 @@ const CompetencesPage = () => {
 
     setBusy(true)
     try {
-      await api.delete(`/delete_competence/${id}`)
+      await api.delete(`/competencies/${id}`)
       setItems(prev => prev.filter(x => x.id !== id))
       handleOpen('Компетенция удалена', 'success')
     } catch (e) {
