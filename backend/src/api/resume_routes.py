@@ -158,9 +158,8 @@ async def analyze_resume(
             "missing_skills": target_result["missing_skills"],
         }
 
+        best_profession = ml_response.best_profession
         if not ml_response.is_target_best and ml_response.alternative_professions:
-            best_profession = ml_response.best_profession
-
             alternatives = []
             for alt in ml_response.alternative_professions[:3]:
                 alt_dict = _convert_profession_match_to_dict(alt)
@@ -175,7 +174,7 @@ async def analyze_resume(
                 "is_target_best": False,
                 "better_profession": best_profession,
                 "alternative_professions": alternatives,
-                "message": f"Вы также хорошо подходите на позицию '{best_profession}' (совпадение {_get_match_percent_for_profession(ml_response, best_profession):.1f}%)",
+                "message": f"Вы хорошо подходите на позицию '{best_profession}' (совпадение {_get_match_percent_for_profession(ml_response, best_profession):.1f}%)",
             }
 
             logger.info(f"Adding recommendation: better profession '{best_profession}'")
