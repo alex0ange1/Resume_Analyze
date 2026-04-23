@@ -24,25 +24,31 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x10ml_service.proto\x12\nml_service\"8\n\rResumeRequest\x12\x13\n\x0bresume_text\x18\x01 \x01(\t\x12\x12\n\nprofession\x18\x02 \x01(\t\"\xb3\x01\n\x0eResumeResponse\x12\x41\n\x0c\x66inal_levels\x18\x01 \x03(\x0b\x32+.ml_service.ResumeResponse.FinalLevelsEntry\x12*\n\nevaluation\x18\x02 \x01(\x0b\x32\x16.ml_service.Evaluation\x1a\x32\n\x10\x46inalLevelsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x05:\x02\x38\x01\"U\n\nEvaluation\x12\x15\n\rmatch_percent\x18\x01 \x01(\x01\x12\x30\n\x0emissing_skills\x18\x02 \x03(\x0b\x32\x18.ml_service.MissingSkill\"M\n\x0cMissingSkill\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x16\n\x0erequired_level\x18\x02 \x01(\x05\x12\x17\n\x0f\x63\x61ndidate_level\x18\x03 \x01(\x05\x32Y\n\x0eResumeAnalyzer\x12G\n\x0e\x45valuateResume\x12\x19.ml_service.ResumeRequest\x1a\x1a.ml_service.ResumeResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x10ml_service.proto\x12\nml_service\"2\n\nCompetency\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x16\n\x0erequired_level\x18\x02 \x01(\x05\"H\n\nProfession\x12\x0c\n\x04name\x18\x01 \x01(\t\x12,\n\x0c\x63ompetencies\x18\x02 \x03(\x0b\x32\x16.ml_service.Competency\"\x88\x01\n\rResumeRequest\x12\x13\n\x0bresume_text\x18\x01 \x01(\t\x12\x31\n\x11target_profession\x18\x02 \x01(\x0b\x32\x16.ml_service.Profession\x12/\n\x0f\x61ll_professions\x18\x03 \x03(\x0b\x32\x16.ml_service.Profession\"\xe0\x01\n\x0fProfessionMatch\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x15\n\rmatch_percent\x18\x02 \x01(\x01\x12\x42\n\x0c\x66inal_levels\x18\x03 \x03(\x0b\x32,.ml_service.ProfessionMatch.FinalLevelsEntry\x12\x30\n\x0emissing_skills\x18\x04 \x03(\x0b\x32\x18.ml_service.MissingSkill\x1a\x32\n\x10\x46inalLevelsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x05:\x02\x38\x01\"\xb3\x01\n\x0eResumeResponse\x12\x32\n\rtarget_result\x18\x01 \x01(\x0b\x32\x1b.ml_service.ProfessionMatch\x12<\n\x17\x61lternative_professions\x18\x02 \x03(\x0b\x32\x1b.ml_service.ProfessionMatch\x12\x16\n\x0eis_target_best\x18\x03 \x01(\x08\x12\x17\n\x0f\x62\x65st_profession\x18\x04 \x01(\t\"U\n\nEvaluation\x12\x15\n\rmatch_percent\x18\x01 \x01(\x01\x12\x30\n\x0emissing_skills\x18\x02 \x03(\x0b\x32\x18.ml_service.MissingSkill\"M\n\x0cMissingSkill\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x16\n\x0erequired_level\x18\x02 \x01(\x05\x12\x17\n\x0f\x63\x61ndidate_level\x18\x03 \x01(\x05\x32Y\n\x0eResumeAnalyzer\x12G\n\x0e\x45valuateResume\x12\x19.ml_service.ResumeRequest\x1a\x1a.ml_service.ResumeResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'ml_service_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
-  _globals['_RESUMERESPONSE_FINALLEVELSENTRY']._loaded_options = None
-  _globals['_RESUMERESPONSE_FINALLEVELSENTRY']._serialized_options = b'8\001'
-  _globals['_RESUMEREQUEST']._serialized_start=32
-  _globals['_RESUMEREQUEST']._serialized_end=88
-  _globals['_RESUMERESPONSE']._serialized_start=91
-  _globals['_RESUMERESPONSE']._serialized_end=270
-  _globals['_RESUMERESPONSE_FINALLEVELSENTRY']._serialized_start=220
-  _globals['_RESUMERESPONSE_FINALLEVELSENTRY']._serialized_end=270
-  _globals['_EVALUATION']._serialized_start=272
-  _globals['_EVALUATION']._serialized_end=357
-  _globals['_MISSINGSKILL']._serialized_start=359
-  _globals['_MISSINGSKILL']._serialized_end=436
-  _globals['_RESUMEANALYZER']._serialized_start=438
-  _globals['_RESUMEANALYZER']._serialized_end=527
+  _globals['_PROFESSIONMATCH_FINALLEVELSENTRY']._loaded_options = None
+  _globals['_PROFESSIONMATCH_FINALLEVELSENTRY']._serialized_options = b'8\001'
+  _globals['_COMPETENCY']._serialized_start=32
+  _globals['_COMPETENCY']._serialized_end=82
+  _globals['_PROFESSION']._serialized_start=84
+  _globals['_PROFESSION']._serialized_end=156
+  _globals['_RESUMEREQUEST']._serialized_start=159
+  _globals['_RESUMEREQUEST']._serialized_end=295
+  _globals['_PROFESSIONMATCH']._serialized_start=298
+  _globals['_PROFESSIONMATCH']._serialized_end=522
+  _globals['_PROFESSIONMATCH_FINALLEVELSENTRY']._serialized_start=472
+  _globals['_PROFESSIONMATCH_FINALLEVELSENTRY']._serialized_end=522
+  _globals['_RESUMERESPONSE']._serialized_start=525
+  _globals['_RESUMERESPONSE']._serialized_end=704
+  _globals['_EVALUATION']._serialized_start=706
+  _globals['_EVALUATION']._serialized_end=791
+  _globals['_MISSINGSKILL']._serialized_start=793
+  _globals['_MISSINGSKILL']._serialized_end=870
+  _globals['_RESUMEANALYZER']._serialized_start=872
+  _globals['_RESUMEANALYZER']._serialized_end=961
 # @@protoc_insertion_point(module_scope)

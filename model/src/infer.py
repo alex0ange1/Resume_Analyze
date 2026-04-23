@@ -1,10 +1,10 @@
 import logging
 import os
 from pathlib import Path
+from typing import Dict, Optional
 
-from model.data.profession_matrix import professions_dict
-from model.src.keyword_detector import check_all_competencies
-from model.src.infer_stacking import StackingInference
+from keyword_detector import check_all_competencies
+from infer_stacking import StackingInference
 
 logger = logging.getLogger(__name__)
 
@@ -25,13 +25,17 @@ def _get_stacker() -> StackingInference:
     return _stacker
 
 
-def predict_levels_stacking(resume_text: str, competencies_list: list[str]) -> dict[str, int]:
+def predict_levels_stacking(
+    resume_text: str, competencies_list: list[str]
+) -> dict[str, int]:
     """Уровни 0, 1, 2 — как при обучении (мета-модель)."""
     stacker = _get_stacker()
     results = {}
     for comp in competencies_list:
         out = stacker.predict_level(resume_text, comp)
-        results[comp] = int(out["level"])
+        out_level = out["level"]
+        new_level = out_level + 1
+        results[comp] = int(new_level)
     return results
 
 
@@ -39,12 +43,21 @@ def predict_levels_stacking(resume_text: str, competencies_list: list[str]) -> d
 # Оценка кандидата
 # -----------------------------
 def evaluate_candidate(
-    candidate_levels: dict, profession: str, professions_dict: dict
+    candidate_levels: Dict[str, int],
+    profession_name: str,
+    required_skills: Dict[str, int],
 ) -> dict:
-    required_skills = professions_dict.get(profession)
-    if not required_skills:
-        raise ValueError(f"Профессия {profession} не найдена в словаре.")
+    """
+    Оценивает соответствие кандидата профессии
 
+    Args:
+        candidate_levels: {skill_name: candidate_level}
+        profession_name: название профессии
+        required_skills: {skill_name: required_level}
+
+    Returns:
+        dict с match_percent и missing_skills
+    """
     total_required = 0
     total_matched = 0
     missing_skills = []
@@ -72,10 +85,23 @@ def evaluate_candidate(
 
 
 # -----------------------------
-# Полная оценка резюме
+# Полная оценка резюме (одна профессия)
 # -----------------------------
-def full_evaluation(resume_text: str, profession: str):
-    competencies = list(professions_dict[profession].keys())
+def full_evaluation(
+    resume_text: str, profession: str, required_skills: Optional[Dict[str, int]] = None
+) -> dict:
+    """
+    Оценивает резюме для одной профессии
+
+    Args:
+        resume_text: текст резюме
+        profession: название профессии
+        required_skills: словарь {skill: required_level} (если None, берет из professions_dict)
+    """
+    if required_skills is None:
+        raise ValueError(f"Профессия {profession} не найдена в словаре.")
+
+    competencies = list(required_skills.keys())
 
     # 1. Keyword: нет упоминания → 0 (stacking не вызываем).
     keyword_hits = check_all_competencies(resume_text)
@@ -95,9 +121,96 @@ def full_evaluation(resume_text: str, profession: str):
         else:
             final_levels[comp] = model_levels.get(comp, 0)
 
-    evaluation = evaluate_candidate(final_levels, profession, professions_dict)
+    evaluation = evaluate_candidate(final_levels, profession, required_skills)
 
     return {"final_levels": final_levels, "evaluation": evaluation}
+
+
+# -----------------------------
+# Оценка по всем профессиям
+# -----------------------------
+def evaluate_all_professions(
+    resume_text: str,
+    target_profession_name: str,
+    all_professions: Dict[str, Dict[str, int]],
+) -> Dict:
+    """
+    Оценивает резюме по всем переданным профессиям
+
+    Args:
+        resume_text: текст резюме
+        target_profession_name: название целевой профессии
+        all_professions: словарь {profession_name: {skill_name: required_level}}
+
+    Returns:
+        dict с результатами по всем профессиям
+    """
+    logger.info(f"Evaluating {len(all_professions)} professions for resume")
+
+    # 1. Кэшируем keyword detection (он не зависит от профессии!)
+    keyword_hits = check_all_competencies(resume_text)
+    logger.info(
+        f"Keyword detection completed. Found hits: {sum(keyword_hits.values())} competencies"
+    )
+
+    # 2. Получаем все уникальные компетенции с сигналом
+    all_competencies_with_signal = [comp for comp, hit in keyword_hits.items() if hit]
+    logger.info(
+        f"Competencies with keyword signal: {len(all_competencies_with_signal)}"
+    )
+
+    # 3. Batch предсказание stacking модели для всех компетенций с сигналом
+    model_levels = {}
+    if all_competencies_with_signal:
+        model_levels = predict_levels_stacking(
+            resume_text, all_competencies_with_signal
+        )
+        logger.info(
+            f"Stacking predictions completed for {len(model_levels)} competencies"
+        )
+
+    # 4. Оцениваем каждую профессию
+    results = {}
+    for prof_name, required_skills in all_professions.items():
+        competencies = list(required_skills.keys())
+
+        # Формируем финальные уровни для этой профессии
+        final_levels = {}
+        for comp in competencies:
+            if not keyword_hits.get(comp, False):
+                final_levels[comp] = 0
+            else:
+                final_levels[comp] = model_levels.get(comp, 0)
+
+        # Вычисляем процент соответствия
+        evaluation = evaluate_candidate(final_levels, prof_name, required_skills)
+
+        results[prof_name] = {
+            "match_percent": evaluation["match_percent"],
+            "missing_skills": evaluation["missing_skills"],
+            "final_levels": final_levels,
+        }
+
+    # 5. Находим лучшую профессию
+    best_profession = max(results.items(), key=lambda x: x[1]["match_percent"])
+
+    # 6. Определяем, является ли целевая лучшей
+    target_match = results.get(target_profession_name, {}).get("match_percent", 0)
+    best_match = best_profession[1]["match_percent"]
+    is_target_best = target_match >= best_match - 0.01  # с учетом погрешности
+
+    logger.info(f"Target profession '{target_profession_name}': {target_match:.2f}%")
+    logger.info(f"Best profession '{best_profession[0]}': {best_match:.2f}%")
+    logger.info(f"Is target best: {is_target_best}")
+
+    return {
+        "target_result": results.get(target_profession_name),
+        "all_results": results,
+        "is_target_best": is_target_best,
+        "best_profession": best_profession[0]
+        if not is_target_best
+        else target_profession_name,
+    }
 
 
 if __name__ == "__main__":

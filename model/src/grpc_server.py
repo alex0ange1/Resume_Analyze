@@ -1,10 +1,11 @@
 import asyncio
 import logging
+from typing import Dict
 import grpc
 from concurrent import futures
 
-
 from proto import ml_service_pb2, ml_service_pb2_grpc
+from infer import evaluate_all_professions
 
 logger = logging.getLogger(__name__)
 
@@ -13,94 +14,117 @@ class ResumeAnalyzerServicer(ml_service_pb2_grpc.ResumeAnalyzerServicer):
     async def EvaluateResume(
         self, request: ml_service_pb2.ResumeRequest, context: grpc.aio.ServicerContext
     ) -> ml_service_pb2.ResumeResponse:
+        """
+        Анализирует резюме по всем переданным профессиям
+        """
         try:
-            logger.info(f"Evaluating resume for profession: {request.profession}")
+            resume_text = request.resume_text
+            target_profession_name = request.target_profession.name
 
-            result = {
-                "final_levels": {
-                    "Определения, история развития и главные тренды ИИ": 2,
-                    "Процесс, стадии и методологии разработки решений на основе ИИ (Docker, Linux/Bash, Git)": 2,
-                    "Статистические методы и первичный анализ данных": 3,
-                    "Оценка качества работы методов ИИ": 2,
-                    "Языки программирования и библиотеки (Python, C++)": 3,
-                    "SQL базы данных (GreenPLum, Postgres, Oracle)": 2,
-                    "NoSQL базы данных (Cassandra, MongoDB, ElasticSearch, Neo4J, Hbase)": 1,
-                    "Hadoop, SPARK, Hive": 1,
-                    "Качество и предобработка данных, подходы и инструменты": 3,
-                    "Работа с распределенной кластерной системой": 1,
-                    "Методы машинного обучения": 3,
-                    "Рекомендательные системы": 2,
-                    "Методы оптимизации": 2,
-                    "Основы глубокого обучения": 3,
-                    "Анализ изображений и видео": 1,
-                    "Машинное обучение на больших данных": 2,
-                    "Глубокое обучение для анализа естественного языка": 3,
-                    "Обучение с подкреплением и глубокое обучение с подкреплением": 1,
-                    "Глубокое обучение для анализа и генерации изображений, видео": 1,
-                    "Анализ естественного языка": 3,
-                    "Информационный поиск": 2,
-                    "Массово параллельные вычисления для ускорения машинного обучения (GPU)": 2,
-                    "Потоковая обработка данных (data streaming, event processing)": 1,
-                    "Массово параллельная обработка и анализ данных": 2,
-                },
-                "evaluation": {
-                    "match_percent": 56.5,
-                    "missing_skills": [
-                        {
-                            "name": "NoSQL базы данных (Cassandra, MongoDB, ElasticSearch, Neo4J, Hbase)",
-                            "required_level": 2,
-                            "candidate_level": 1,
-                        },
-                        {
-                            "name": "Hadoop, SPARK, Hive",
-                            "required_level": 2,
-                            "candidate_level": 1,
-                        },
-                        {
-                            "name": "Работа с распределенной кластерной системой",
-                            "required_level": 2,
-                            "candidate_level": 1,
-                        },
-                    ],
-                },
-            }
+            logger.info(
+                f"Evaluating resume for target profession: {target_profession_name}"
+            )
+            logger.info(
+                f"Total professions to evaluate: {len(request.all_professions)}"
+            )
 
-            final_levels = {}
-            for comp, level in result["final_levels"].items():
-                final_levels[comp] = level
+            # 1. Конвертируем protobuf в словарь для всех профессий
+            all_professions: Dict[str, Dict[str, int]] = {}
 
-            missing_skills = []
-            for skill in result["evaluation"]["missing_skills"]:
-                missing_skills.append(
-                    ml_service_pb2.MissingSkill(
-                        name=skill["name"],
-                        required_level=skill["required_level"],
-                        candidate_level=skill["candidate_level"],
-                    )
+            for prof in request.all_professions:
+                competencies_dict = {}
+                for comp in prof.competencies:
+                    competencies_dict[comp.name] = comp.required_level
+                all_professions[prof.name] = competencies_dict
+
+            # Добавляем целевую профессию, если ее нет в списке (на всякий случай)
+            if target_profession_name not in all_professions:
+                target_competencies = {}
+                for comp in request.target_profession.competencies:
+                    target_competencies[comp.name] = comp.required_level
+                all_professions[target_profession_name] = target_competencies
+
+            # 2. Вызываем массовую оценку
+            evaluation_result = evaluate_all_professions(
+                resume_text=resume_text,
+                target_profession_name=target_profession_name,
+                all_professions=all_professions,
+            )
+
+            # 3. Формируем ответ
+            target_result = evaluation_result["target_result"]
+            if target_result is None:
+                raise ValueError(
+                    f"Target profession '{target_profession_name}' not found in results"
                 )
 
+            # Создаем ProfessionMatch для целевой профессии
+            target_pb = self._create_profession_match(
+                target_profession_name, target_result
+            )
+
+            # Создаем альтернативы (все кроме целевой, отсортированные по убыванию)
+            alternatives = []
+            for prof_name, result in evaluation_result["all_results"].items():
+                if prof_name == target_profession_name:
+                    continue
+                alternatives.append(self._create_profession_match(prof_name, result))
+
+            # Сортируем по match_percent
+            alternatives.sort(key=lambda x: x.match_percent, reverse=True)
+
+            # Берем топ-3
+            top_alternatives = alternatives[:3]
+
             response = ml_service_pb2.ResumeResponse(
-                final_levels=final_levels,
-                evaluation=ml_service_pb2.Evaluation(
-                    match_percent=result["evaluation"]["match_percent"],
-                    missing_skills=missing_skills,
-                ),
+                target_result=target_pb,
+                alternative_professions=top_alternatives,
+                is_target_best=evaluation_result["is_target_best"],
+                best_profession=evaluation_result["best_profession"],
             )
 
             logger.info(
-                f"Successfully evaluated resume. Match: {result['evaluation']['match_percent']:.2f}%"
+                f"Analysis completed. Target match: {target_result['match_percent']:.2f}%"
             )
+            logger.info(f"Is target best: {evaluation_result['is_target_best']}")
+            if not evaluation_result["is_target_best"]:
+                logger.info(
+                    f"Better profession found: {evaluation_result['best_profession']}"
+                )
+
             return response
 
         except ValueError as e:
             logger.warning(f"Validation error: {str(e)}")
             await context.abort(grpc.StatusCode.INVALID_ARGUMENT, str(e))
         except Exception as e:
-            logger.error(f"Error evaluating resume: {str(e)}")
+            logger.error(f"Error evaluating resume: {str(e)}", exc_info=True)
             await context.abort(grpc.StatusCode.INTERNAL, f"Evaluation error: {str(e)}")
 
-        # Fallback (never reached, but needed for type checker)
         return ml_service_pb2.ResumeResponse()
+
+    def _create_profession_match(
+        self, prof_name: str, result: dict
+    ) -> ml_service_pb2.ProfessionMatch:
+        """Создает protobuf объект ProfessionMatch из dict результата"""
+        pb_result = ml_service_pb2.ProfessionMatch(
+            name=prof_name, match_percent=result["match_percent"]
+        )
+
+        # Добавляем missing_skills
+        for skill in result.get("missing_skills", []):
+            missing_skill = ml_service_pb2.MissingSkill(
+                name=skill["name"],
+                required_level=skill["required_level"],
+                candidate_level=skill["candidate_level"],
+            )
+            pb_result.missing_skills.append(missing_skill)
+
+        # Добавляем final_levels
+        for comp_name, level in result.get("final_levels", {}).items():
+            pb_result.final_levels[comp_name] = level
+
+        return pb_result
 
 
 async def main():

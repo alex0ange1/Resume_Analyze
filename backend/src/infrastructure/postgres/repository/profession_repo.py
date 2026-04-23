@@ -52,6 +52,24 @@ class ProfessionRepository:
 
         return ProfessionSchema.model_validate(obj=profession)
 
+    async def get_profession_by_name(
+        self,
+        session: AsyncSession,
+        name: str,
+    ) -> ProfessionSchema | None:
+        from sqlalchemy import func
+
+        query = select(self._collection).where(
+            func.lower(self._collection.name) == func.lower(name)
+        )
+
+        profession = await session.scalar(query)
+
+        if not profession:
+            return None
+
+        return ProfessionSchema.model_validate(obj=profession)
+
     async def get_all_professions(
         self,
         session: AsyncSession,
